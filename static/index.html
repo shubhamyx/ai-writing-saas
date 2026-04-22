@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Writing Assistant</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;800&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'DM Mono', monospace; background: #0a0a0a; color: #f0f0f0; min-height: 100vh; }
+        
+        header { padding: 20px 40px; border-bottom: 1px solid #222; display: flex; align-items: center; justify-content: space-between; }
+        .logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 20px; color: #c8f135; }
+        .tagline { font-size: 12px; color: #666; }
+        
+        .hero { text-align: center; padding: 60px 20px 40px; }
+        .hero h1 { font-family: 'Syne', sans-serif; font-size: 48px; font-weight: 800; line-height: 1.1; margin-bottom: 16px; }
+        .hero h1 span { color: #c8f135; }
+        .hero p { color: #888; font-size: 14px; max-width: 500px; margin: 0 auto; }
+        
+        .container { max-width: 900px; margin: 0 auto; padding: 0 20px 60px; }
+        
+        .card { background: #111; border: 1px solid #222; border-radius: 12px; padding: 32px; margin-bottom: 24px; }
+        
+        .content-types { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+        .type-btn { padding: 12px; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; cursor: pointer; text-align: center; font-family: 'DM Mono', monospace; font-size: 12px; color: #888; transition: all 0.2s; }
+        .type-btn:hover { border-color: #c8f135; color: #c8f135; }
+        .type-btn.active { background: #c8f135; color: #000; border-color: #c8f135; font-weight: 600; }
+        .type-icon { font-size: 20px; margin-bottom: 6px; }
+        
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-size: 11px; color: #666; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+        input, select, textarea { width: 100%; padding: 12px 16px; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: #f0f0f0; font-family: 'DM Mono', monospace; font-size: 14px; outline: none; transition: border-color 0.2s; }
+        input:focus, select:focus, textarea:focus { border-color: #c8f135; }
+        select option { background: #1a1a1a; }
+        
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        
+        .generate-btn { width: 100%; padding: 16px; background: #c8f135; color: #000; border: none; border-radius: 8px; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px; cursor: pointer; transition: all 0.2s; letter-spacing: 0.5px; }
+        .generate-btn:hover { background: #b8e020; }
+        .generate-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .output-card { display: none; }
+        .output-card.visible { display: block; }
+        
+        .output-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .output-title { font-family: 'Syne', sans-serif; font-weight: 600; font-size: 16px; }
+        .copy-btn { padding: 8px 16px; background: transparent; border: 1px solid #333; border-radius: 6px; color: #888; font-family: 'DM Mono', monospace; font-size: 12px; cursor: pointer; transition: all 0.2s; }
+        .copy-btn:hover { border-color: #c8f135; color: #c8f135; }
+        
+        .output-content { background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 20px; font-size: 14px; line-height: 1.8; white-space: pre-wrap; max-height: 500px; overflow-y: auto; color: #ddd; }
+        
+        .loading { display: none; text-align: center; padding: 40px; color: #666; }
+        .loading.visible { display: block; }
+        .dots { display: inline-flex; gap: 6px; }
+        .dot { width: 8px; height: 8px; background: #c8f135; border-radius: 50%; animation: bounce 1.2s infinite; }
+        .dot:nth-child(2) { animation-delay: 0.2s; }
+        .dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-8px)} }
+        
+        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 40px; }
+        .stat { background: #111; border: 1px solid #222; border-radius: 8px; padding: 20px; text-align: center; }
+        .stat-number { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; color: #c8f135; }
+        .stat-label { font-size: 11px; color: #666; margin-top: 4px; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">WRITEAI</div>
+        <div class="tagline">Powered by Groq + LLaMA 3.3</div>
+    </header>
+
+    <div class="hero">
+        <h1>Write anything<br><span>10x faster</span></h1>
+        <p>AI-powered content generation for blogs, emails, social media, and product descriptions.</p>
+    </div>
+
+    <div class="container">
+        <div class="stats">
+            <div class="stat"><div class="stat-number">4</div><div class="stat-label">Content Types</div></div>
+            <div class="stat"><div class="stat-number">∞</div><div class="stat-label">Generations</div></div>
+            <div class="stat"><div class="stat-number">&lt;3s</div><div class="stat-label">Average Speed</div></div>
+        </div>
+
+        <div class="card">
+            <div class="content-types">
+                <div class="type-btn active" onclick="selectType('blog', this)">
+                    <div class="type-icon">📝</div>Blog Post
+                </div>
+                <div class="type-btn" onclick="selectType('email', this)">
+                    <div class="type-icon">📧</div>Email
+                </div>
+                <div class="type-btn" onclick="selectType('social', this)">
+                    <div class="type-icon">📱</div>Social
+                </div>
+                <div class="type-btn" onclick="selectType('product', this)">
+                    <div class="type-icon">🛍️</div>Product
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Topic / Description</label>
+                <textarea id="topic" rows="3" placeholder="What do you want to write about?"></textarea>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Tone</label>
+                    <select id="tone">
+                        <option>Professional</option>
+                        <option>Casual</option>
+                        <option>Persuasive</option>
+                        <option>Informative</option>
+                        <option>Humorous</option>
+                        <option>Inspirational</option>
+                    </select>
+                </div>
+                <div class="form-group" id="length-group">
+                    <label>Word Count</label>
+                    <select id="length">
+                        <option value="300">Short (~300 words)</option>
+                        <option value="500" selected>Medium (~500 words)</option>
+                        <option value="800">Long (~800 words)</option>
+                        <option value="1200">Extra Long (~1200 words)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group" id="platform-group" style="display:none;">
+                <label>Platform</label>
+                <select id="platform">
+                    <option>LinkedIn</option>
+                    <option>Twitter</option>
+                    <option>Instagram</option>
+                    <option>Facebook</option>
+                </select>
+            </div>
+
+            <button class="generate-btn" onclick="generate()" id="gen-btn">GENERATE CONTENT</button>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="dots">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>
+            <p style="margin-top: 16px; font-size: 13px;">Generating your content...</p>
+        </div>
+
+        <div class="card output-card" id="output-card">
+            <div class="output-header">
+                <div class="output-title">Generated Content</div>
+                <button class="copy-btn" onclick="copyContent()">Copy</button>
+            </div>
+            <div class="output-content" id="output"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentType = 'blog';
+
+        function selectType(type, el) {
+            currentType = type;
+            document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('platform-group').style.display = type === 'social' ? 'block' : 'none';
+            document.getElementById('length-group').style.display = type === 'email' || type === 'social' ? 'none' : 'block';
+        }
+
+        async function generate() {
+            const topic = document.getElementById('topic').value.trim();
+            if (!topic) { alert('Please enter a topic.'); return; }
+
+            const btn = document.getElementById('gen-btn');
+            btn.disabled = true;
+            document.getElementById('loading').classList.add('visible');
+            document.getElementById('output-card').classList.remove('visible');
+
+            const res = await fetch('/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    content_type: currentType,
+                    topic: topic,
+                    tone: document.getElementById('tone').value,
+                    length: document.getElementById('length').value,
+                    platform: document.getElementById('platform').value
+                })
+            });
+
+            const data = await res.json();
+            document.getElementById('loading').classList.remove('visible');
+            document.getElementById('output').textContent = data.content;
+            document.getElementById('output-card').classList.add('visible');
+            btn.disabled = false;
+        }
+
+        function copyContent() {
+            const text = document.getElementById('output').textContent;
+            navigator.clipboard.writeText(text);
+            const btn = document.querySelector('.copy-btn');
+            btn.textContent = 'Copied!';
+            setTimeout(() => btn.textContent = 'Copy', 2000);
+        }
+    </script>
+</body>
+</html>
